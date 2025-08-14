@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
+<head >
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cadastro</title>
@@ -60,13 +60,18 @@
     });
   </script>
 </head>
-<body>
-  <div class="container">
+<body class="pagina-login">
+  <div class="login">
     <h1>Cadastro</h1>
+    <br>
     <form id="formCadastro">
+      
       <input name="email" type="email" placeholder="E-mail" required>
+      <br>
       <input name="senha" type="password" placeholder="Senha" required>
+      <br>
       <input name="confirmarSenha" type="password" placeholder="Confirmar Senha" required>
+      <br>
       <button type="submit">Cadastrar</button>
     </form>
     <div id="success" style="display:none;">

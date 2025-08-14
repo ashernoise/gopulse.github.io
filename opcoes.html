@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Opções</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    h1 { margin-bottom: 20px; }
+    section { margin-bottom: 30px; }
+    label { display: block; margin-top: 10px; }
+    input, textarea { width: 100%; padding: 8px; margin-top: 4px; }
+    button {
+      margin-top: 10px;
+      padding: 10px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:hover { background: #45a049; }
+    .msg { margin-top: 10px; color: green; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <h1>Opções</h1>
+
+  <!-- Alterar senha -->
+  <section>
+    <h2>Alterar senha</h2>
+    <label for="novaSenha"></label> senha:</label>
+    <input type="password" id="novaSenha">
+    <button id="alterarSenhaBtn">Alterar senha</button>
+    <p id="senhaStatus" class="msg"></p>
+  </section>
+
+  <!-- Inserir registro manual -->
+  <section>
+    <h2>Inserir registro de ponto manual</h2>
+    <label for="emailManual">Email do usuário:</label>
+    <input type="email" id="emailManual">
+
+    <label for="dataHoraManual">Data e hora:</label>
+    <input type="datetime-local" id="dataHoraManual">
+
+    <label for="localManual">Localização:</label>
+    <textarea id="localManual" rows="3"></textarea>
+
+    <button id="inserirRegistroBtn">Inserir registro</button>
+    <p id="registroStatus" class="msg"></p>
+  </section>
+
+  <script type="module">
+    import { supabase } from './supabase.js';
+
+    const alterarSenhaBtn = document.getElementById("alterarSenhaBtn");
+    const novaSenhaInput = document.getElementById("novaSenha");
+    const senhaStatus = document.getElementById("senhaStatus");
+
+    const inserirRegistroBtn = document.getElementById("inserirRegistroBtn");
+    const emailManual = document.getElementById("emailManual");
+    const dataHoraManual = document.getElementById("dataHoraManual");
+    const localManual = document.getElementById("localManual");
+    const registroStatus = document.getElementById("registroStatus");
+
+    // 1️⃣ Alterar senha
+    alterarSenhaBtn.addEventListener("click", async () => {
+      const novaSenha = novaSenhaInput.value.trim();
+      if (!novaSenha) {
+        senhaStatus.textContent = "Digite uma nova senha.";
+        senhaStatus.className = "msg error";
+        return;
+      }
+
+      const { error } = await supabase.auth.updateUser({ password: novaSenha });
+      if (error) {
+        senhaStatus.textContent = "Erro: " + error.message;
+        senhaStatus.className = "msg error";
+      } else {
+        senhaStatus.textContent = "Senha alterada com sucesso!";
+        senhaStatus.className = "msg";
+        novaSenhaInput.value = "";
+      }
+    });
+
+    // 2️⃣ Inserir registro manual
+    inserirRegistroBtn.addEventListener("click", async () => {
+      const email = emailManual.value.trim();
+      const horario = dataHoraManual.value;
+      const localidade = localManual.value.trim();
+
+      if (!email || !horario || !localidade) {
+        registroStatus.textContent = "Preencha todos os campos.";
+        registroStatus.className = "msg error";
+        return;
+      }
+
+      // Busca o ID do usuário pelo email
+      const { data: userData, error: userError } = await supabase
+        .from('registros')
+        .select('user_id, email')
+        .eq('email', email)
+        .limit(1);
+
+      if (userError || !userData.length) {
+        registroStatus.textContent = "Usuário não encontrado.";
+        registroStatus.className = "msg error";
+        return;
+      }
+
+      const userId = userData[0].user_id;
+
+      const { error } = await supabase
+        .from('registros')
+        .insert([{
+          user_id: userId,
+          email: email,
+          horario: new Date(horario).toISOString(),
+          localidade: localidade
+        }]);
+
+      if (error) {
+        registroStatus.textContent = "Erro ao inserir: " + error.message;
+        registroStatus.className = "msg error";
+      } else {
+        registroStatus.textContent = "Registro inserido com sucesso!";
+        registroStatus.className = "msg";
+        emailManual.value = "";
+        dataHoraManual.value = "";
+        localManual.value = "";
+      }
+    });
+  </script>
+</body>
+</html>

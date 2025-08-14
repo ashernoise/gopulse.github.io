@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastro</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js';
+    
+    const supabase = createClient(
+      'https://hvragkwwgqlhxqsrrdly.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2cmFna3d3Z3FsaHhxc3JyZGx5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwMjMyNjEsImV4cCI6MjA3MDU5OTI2MX0.yDBY2Kp0H71aJe8jRjwKAzLhqEghpCOZw3PsjXqvIP8'
+    );
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('formCadastro');
+      const successDiv = document.getElementById('success');
+      
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const email = form.email.value.trim();
+        const senha = form.senha.value;
+        const confirm = form.confirmarSenha.value;
+
+        if (!email || !senha || !confirm) {
+          alert('Preencha todos os campos.');
+          return;
+        }
+        if (senha !== confirm) {
+          alert('Senhas não conferem.');
+          return;
+        }
+
+        const { data, error } = await supabase.auth.signUp({ email, password: senha });
+
+        if (error) {
+          alert('Erro ao cadastrar: ' + error.message);
+          return;
+        }
+
+        if (!data.user) {
+          alert('Usuário não criado. Verifique seu e-mail, talvez precise confirmar.');
+          return;
+        }
+
+        const insert = await supabase.from('usuarios').insert([
+          { id: data.user.id, email }
+        ]);
+
+        if (insert.error) {
+          alert('Erro ao salvar usuário: ' + insert.error.message);
+          return;
+        }
+
+        form.style.display = 'none';
+        successDiv.style.display = 'block';
+      });
+    });
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1>Cadastro</h1>
+    <form id="formCadastro">
+      <input name="email" type="email" placeholder="E-mail" required>
+      <input name="senha" type="password" placeholder="Senha" required>
+      <input name="confirmarSenha" type="password" placeholder="Confirmar Senha" required>
+      <button type="submit">Cadastrar</button>
+    </form>
+    <div id="success" style="display:none;">
+      <p>Cadastro realizado com sucesso!</p>
+      <button onclick="window.location.href='index.html'">Voltar para o Login</button>
+    </div>
+  </div>
+</body>
+</html>

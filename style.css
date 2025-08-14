@@ -6,30 +6,72 @@
   font-family: Arial, sans-serif;
 }
 
-
-body.pagina-login{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    height: 100vh;
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
 }
 
-.login{
+body.pagina-login {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh; /* altura total da tela */
+    width: 100%;
+    background: url('fundo.jpg') no-repeat center/cover;
+  height: 100vh;
+  margin: 0;
+
+}
+
+main.registro-ponto {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    
+}
+input {
+    display:flex;
+    text-align: left;
+    height: 18%;
+    
+}
+/*
+h1{
+    font-family: Arial, sans-serif;
+    
+    font-size: 20px;
+    font-weight: bold;
+    animation: mudarCor 7s infinite alternate-reverse;
+}
+@keyframes mudarCor {
+    45%  { color: rgb(152, 252, 255); }     
+      
+
+}*/
+.login {
     display: flex;
     align-items: center;
     flex-direction: column;
     justify-content: center;
     text-align: center;
     border-radius: 0%;
-    width: 400px;
+    width: 350px;
     height: 300px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    background-color: #d3e6f3;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
 
+    /* Fundo transparente + blur */
+    background: rgba(255, 255, 255, 0.15); 
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px); /* Safari */
+    border-radius: 5%;
 }
 .container {
   display: flex;
   height: 100vh;
+  
 }
 
 /* Menu lateral estreito */
@@ -161,7 +203,7 @@ button {
 }
 
 button:hover {
-    background-color: #45a049; /* tom um pouco mais escuro no hover */
+    background-color: #22beee; /* tom um pouco mais escuro no hover */
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
@@ -201,6 +243,7 @@ button:active {
     color: #666;
     cursor: pointer;
     z-index: 1;
+    color: #2980b9;
 }
 
 .report-table {

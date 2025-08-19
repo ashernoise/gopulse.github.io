@@ -13,22 +13,21 @@
             <input type="password" id="novaSenha" placeholder="Digite a nova senha" required>
             <br>
             <button type="submit">Alterar senha</button>
-
             <br>
-    <p style="color: aliceblue;">
-            <a style="color: aliceblue;" href="./index.html">Voltar ao login</a>
-        </p>
+            <p style="color: aliceblue;">
+                <a style="color: aliceblue;" href="./index.html">Voltar ao login</a>
+            </p>
         </form>
+        
+        <p id="mensagemSucesso" style="color: #4CAF50; display: none; font-weight: bold;">
+            Senha alterada com sucesso! Redirecionando...
+        </p>
     </div>
 
     <script type="module">
         import { supabase } from './supabaseClient.js';
 
-        // Ouve o evento de autenticação assim que a página carrega
         supabase.auth.onAuthStateChange(async (event, session) => {
-            
-            // O evento 'PASSWORD_RECOVERY' é disparado quando o usuário
-            // chega nesta página através de um link de redefinição válido.
             if (event === "PASSWORD_RECOVERY") {
                 const form = document.getElementById("formNovaSenha");
 
@@ -36,8 +35,6 @@
                     e.preventDefault();
                     const senha = document.getElementById("novaSenha").value;
 
-                    // O Supabase já tem a sessão do usuário validada,
-                    // então só precisamos passar a nova senha.
                     const { error } = await supabase.auth.updateUser({
                         password: senha
                     });
@@ -45,8 +42,22 @@
                     if (error) {
                         alert("Erro ao redefinir senha: " + error.message);
                     } else {
-                        alert("Senha alterada com sucesso!");
-                        window.location.href = "./index.html"; // Redireciona para o login
+                        // --- LÓGICA DE SUCESSO ALTERADA ---
+
+                        // 1. Pega os elementos do formulário e da mensagem
+                        const formNovaSenha = document.getElementById("formNovaSenha");
+                        const mensagemSucesso = document.getElementById("mensagemSucesso");
+
+                        // 2. Esconde o formulário para o usuário não clicar de novo
+                        formNovaSenha.style.display = 'none';
+
+                        // 3. Mostra a mensagem de sucesso
+                        mensagemSucesso.style.display = 'block';
+
+                        // 4. Espera 3 segundos antes de redirecionar para o login
+                        setTimeout(() => {
+                            window.location.href = "./index.html";
+                        }, 3000); // 3000 milissegundos = 3 segundos
                     }
                 });
             }
@@ -54,4 +65,3 @@
     </script>
 </body>
 </html>
-

@@ -18,26 +18,24 @@
             <a style="color: aliceblue;" href="./index.html">Voltar ao login</a>
         </p>
     </div>
+    <script>
+    document.getElementById("formRedefinirSenha").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    
+    const email = document.getElementById("emailRedefinir").value;
+    
+    // --- ESTA É A PARTE QUE GERA O LINK ---
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: 'https://ashernoise.github.io/nova-senha.html'
+    });
+    // ------------------------------------
 
-    <script type="module">
-        import { supabase } from './supabaseClient.js';
-
-        document.getElementById("formRedefinirSenha").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById("emailRedefinir").value;
-            
-            // AJUSTE 2: Corrigido o caminho de redirecionamento para incluir a pasta do projeto
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: 'http://127.0.0.1:5500/Ponto-marcadorv01/nova-senha.html'
-            });
-
-            if (error) {
-                alert("Erro: " + error.message);
-            } else {
-                alert("Link de redefinição enviado para o e-mail!");
-            }
-        });
+    if (error) {
+        alert("Erro: " + error.message);
+    } else {
+        alert("Link de redefinição enviado para o e-mail!");
+    }
+});
     </script>
 </body>
 </html>

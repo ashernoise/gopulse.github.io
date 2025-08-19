@@ -3,39 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redefinir Senha</title>
+    <title>Criar Nova Senha</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="pagina-login">
     <div class="login">
-        <h1 style="color: aliceblue;">Redefinir Senha</h1>
-        <form id="formRedefinirSenha">
-            <input type="email" id="emailRedefinir" placeholder="Digite seu e-mail" required>
+        <h1 style="color: aliceblue;">Nova Senha</h1>
+        <form id="formNovaSenha">
+            <input type="password" id="novaSenha" placeholder="Digite a nova senha" required>
             <br>
-            <button type="submit">Enviar link de redefinição</button>
+            <button type="submit">Alterar senha</button>
         </form>
-        <p style="color: aliceblue;">
-            <a style="color: aliceblue;" href="./index.html">Voltar ao login</a>
-        </p>
     </div>
 
     <script type="module">
         import { supabase } from './supabaseClient.js';
 
-        document.getElementById("formRedefinirSenha").addEventListener("submit", async (e) => {
-            e.preventDefault();
+        // Ouve o evento de autenticação assim que a página carrega
+        supabase.auth.onAuthStateChange(async (event, session) => {
             
-            const email = document.getElementById("emailRedefinir").value;
-            
-            // --- ESTA É A LINHA CORRIGIDA ---
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: 'https://ashernoise.github.io/nova-senha.html'
-            });
+            // O evento 'PASSWORD_RECOVERY' é disparado quando o usuário
+            // chega nesta página através de um link de redefinição válido.
+            if (event === "PASSWORD_RECOVERY") {
+                const form = document.getElementById("formNovaSenha");
 
-            if (error) {
-                alert("Erro: " + error.message);
-            } else {
-                alert("Link de redefinição enviado para o e-mail!");
+                form.addEventListener("submit", async (e) => {
+                    e.preventDefault();
+                    const senha = document.getElementById("novaSenha").value;
+
+                    // O Supabase já tem a sessão do usuário validada,
+                    // então só precisamos passar a nova senha.
+                    const { error } = await supabase.auth.updateUser({
+                        password: senha
+                    });
+
+                    if (error) {
+                        alert("Erro ao redefinir senha: " + error.message);
+                    } else {
+                        alert("Senha alterada com sucesso!");
+                        window.location.href = "./index.html"; // Redireciona para o login
+                    }
+                });
             }
         });
     </script>

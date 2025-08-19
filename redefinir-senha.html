@@ -26,11 +26,10 @@
         
         const email = document.getElementById("emailRedefinir").value;
     
-    // --- ESTA É A PARTE QUE GERA O LINK ---
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'https://github.com/ashernoise/gopulse.github.io/blob/main/nova-senha.html'
-    
-        });
+    // ESTA É A URL CORRETA E FINAL
+    redirectTo: 'https://ashernoise.github.io/gopulse.github.io/nova-senha.html'
+});
 
         if (error) {
             alert("Erro: " + error.message);
@@ -41,6 +40,7 @@
 </script>
 </body>
 </html>
+
 
 
 

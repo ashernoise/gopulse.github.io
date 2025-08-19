@@ -19,27 +19,28 @@
         </p>
     </div>
     <script type="module">
-    import { supabase } from './supabaseClient.js';
+import { supabase } from './supabaseClient.js';
 
-    document.getElementById("formRedefinirSenha").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        
-        const email = document.getElementById("emailRedefinir").value;
-    
+document.getElementById("formRedefinirSenha").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById("emailRedefinir").value;
+
+    // --- ESTA É A LINHA QUE DETERMINA O LINK ---
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    // ESTA É A URL CORRETA E FINAL
-    redirectTo: 'https://ashernoise.github.io/gopulse.github.io/nova-senha.html'
-});
-
-        if (error) {
-            alert("Erro: " + error.message);
-        } else {
-            alert("Link de redefinição enviado para o e-mail!");
-        }
+        redirectTo: 'https://ashernoise.github.io/gopulse.github.io/nova-senha.html'
     });
+
+    if (error) {
+        alert("Erro: " + error.message);
+    } else {
+        alert("Link de redefinição enviado para o e-mail!");
+    }
+});
 </script>
 </body>
 </html>
+
 
 
 

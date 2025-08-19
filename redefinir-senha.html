@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redefinir Senha</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="pagina-login">
+    <div class="login">
+        <h1 style="color: aliceblue;">Redefinir Senha</h1>
+        <form id="formRedefinirSenha">
+            <input type="email" id="emailRedefinir" placeholder="Digite seu e-mail" required>
+            <br>
+            <button type="submit">Enviar link de redefinição</button>
+        </form>
+        <p style="color: aliceblue;">
+            <a style="color: aliceblue;" href="./index.html">Voltar ao login</a>
+        </p>
+    </div>
+
+    <script type="module">
+        import { supabase } from './supabaseClient.js';
+
+        document.getElementById("formRedefinirSenha").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById("emailRedefinir").value;
+            
+            // AJUSTE 2: Corrigido o caminho de redirecionamento para incluir a pasta do projeto
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: 'http://127.0.0.1:5500/Ponto-marcadorv01/nova-senha.html'
+            });
+
+            if (error) {
+                alert("Erro: " + error.message);
+            } else {
+                alert("Link de redefinição enviado para o e-mail!");
+            }
+        });
+    </script>
+</body>
+</html>

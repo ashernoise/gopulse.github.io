@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Nova Senha</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="pagina-login">
+    <div class="login">
+        <h1 style="color: aliceblue;">Nova Senha</h1>
+        <form id="formNovaSenha">
+            <input type="password" id="novaSenha" placeholder="Digite a nova senha" required>
+            <br>
+            <button type="submit">Alterar senha</button>
+        </form>
+    </div>
+
+    <script type="module">
+        import { supabase } from './supabaseClient.js';
+
+        // Ouve o evento de autenticação assim que a página carrega
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            
+            // O evento 'PASSWORD_RECOVERY' é disparado quando o usuário
+            // chega nesta página através de um link de redefinição válido.
+            if (event === "PASSWORD_RECOVERY") {
+                const form = document.getElementById("formNovaSenha");
+
+                form.addEventListener("submit", async (e) => {
+                    e.preventDefault();
+                    const senha = document.getElementById("novaSenha").value;
+
+                    // O Supabase já tem a sessão do usuário validada,
+                    // então só precisamos passar a nova senha.
+                    const { error } = await supabase.auth.updateUser({
+                        password: senha
+                    });
+
+                    if (error) {
+                        alert("Erro ao redefinir senha: " + error.message);
+                    } else {
+                        alert("Senha alterada com sucesso!");
+                        window.location.href = "./index.html"; // Redireciona para o login
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

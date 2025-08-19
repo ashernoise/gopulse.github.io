@@ -23,8 +23,9 @@
         const email = form.email.value.trim();
         const senha = form.senha.value;
         const confirm = form.confirmarSenha.value;
+        const nivel = parseInt(form.nivel.value);
 
-        if (!email || !senha || !confirm) {
+        if (!email || !senha || !confirm || !nivel) {
           alert('Preencha todos os campos.');
           return;
         }
@@ -46,7 +47,7 @@
         }
 
         const insert = await supabase.from('usuarios').insert([
-          { id: data.user.id, email }
+          { id: data.user.id, email, nivel }
         ]);
 
         if (insert.error) {
@@ -65,13 +66,18 @@
     <h1>Cadastro</h1>
     <br>
     <form id="formCadastro">
-      
       <input name="email" type="email" placeholder="E-mail" required>
       <br>
       <input name="senha" type="password" placeholder="Senha" required>
       <br>
       <input name="confirmarSenha" type="password" placeholder="Confirmar Senha" required>
       <br>
+      <select name="nivel" required>
+        <option value="">Selecione o tipo de usuário</option>
+        <option value="1">Aluno</option>
+        <option value="2">Supervisor</option>
+      </select>
+      <br><br>
       <button type="submit">Cadastrar</button>
     </form>
     <div id="success" style="display:none;">

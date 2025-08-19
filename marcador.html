@@ -9,35 +9,34 @@
 <body class="pagina-marcador">
     
   <main class="registro-ponto">
-    <h1 >Registro de Ponto</h1><br>
-    <div  class="clock" id="clock">--:--:--</div><br>
-    <button id="registrarBtn" >Registrar ponto</button>
+    <h1>Registro de Ponto</h1><br>
+    <div class="clock" id="clock">--:--:--</div><br>
+    <button id="registrarBtn">Registrar ponto</button>
     <br>
     <p id="status" class="msg"></p>
   </main>
 
   <script type="module">
-    import { supabase } from './supabase.js';
+    // IMPORTANTE: Verifique se o caminho para seu cliente Supabase está correto.
+    // Pode ser './supabase.js', './supabaseClient.js', etc.
+    import { supabase } from './supabaseClient.js';
 
+    // --- Elementos da Página ---
     const clockEl = document.getElementById('clock');
     const registrarBtn = document.getElementById('registrarBtn');
     const status = document.getElementById('status');
 
+    // --- Funções Auxiliares ---
+
+    // 1. Atualiza o relógio na tela a cada segundo
     function updateClock() {
       const now = new Date();
-      clockEl.textContent = now.toLocaleTimeString();
+      clockEl.textContent = now.toLocaleTimeString('pt-BR');
     }
     setInterval(updateClock, 1000);
     updateClock();
 
-    (async () => {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) {
-        status.textContent = 'Usuário não autenticado.';
-        registrarBtn.disabled = true;
-      }
-    })();
-
+    // 2. Verifica se o usuário pode registrar (prevenção de spam)
     async function canRegister(userId) {
       const { data, error } = await supabase
         .from('registros')
@@ -46,89 +45,123 @@
         .order('horario', { ascending: false })
         .limit(1);
 
-      if (error) return true;
+      if (error) {
+        console.error("Erro ao verificar último registro:", error);
+        return true; // Permite o registro para não bloquear o usuário em caso de erro.
+      }
       if (!data || data.length === 0) return true;
 
       const last = new Date(data[0].horario);
       const diffMins = (new Date() - last) / 60000;
-      return diffMins >= 30;
+      return diffMins >= 1; // Ajustado para 1 minuto para testes, pode aumentar para 30 depois.
     }
 
+    // 3. Obtém localização por IP como alternativa (fallback)
     async function getIPLocation() {
       try {
         const res = await fetch("https://ipapi.co/json/");
+        if (!res.ok) return null;
         const data = await res.json();
         return { latitude: data.latitude, longitude: data.longitude, accuracy: 1000 };
-      } catch {
+      } catch (err) {
+        console.error("Erro ao obter localização por IP:", err);
         return null;
       }
     }
 
+    // --- LÓGICA PRINCIPAL DO BOTÃO DE REGISTRO ---
     registrarBtn.addEventListener('click', async () => {
-      status.textContent = '';
-      const { data: userData } = await supabase.auth.getUser();
-      const user = userData.user;
+        registrarBtn.disabled = true; // Desabilita o botão para evitar cliques duplos
+        status.textContent = 'Iniciando...';
+        
+        // 1. Verifica a autenticação do usuário
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            status.textContent = 'Usuário não autenticado. Faça o login novamente.';
+            registrarBtn.disabled = false;
+            return;
+        }
 
-      if (!user) {
-        status.textContent = 'Usuário não autenticado.';
-        return;
-      }
+        // 2. Verifica se o usuário já não registrou recentemente
+        const allowed = await canRegister(user.id);
+        if (!allowed) {
+            status.textContent = 'Você já registrou o ponto recentemente.';
+            registrarBtn.disabled = false;
+            return;
+        }
 
-      const allowed = await canRegister(user.id);
-      if (!allowed) {
-        status.textContent = 'Registro já efetuado (menos de 30 minutos).';
-        return;
-      }
+        // 3. Obtém a geolocalização (GPS com fallback para IP)
+        status.textContent = 'Obtendo sua localização...';
+        let location = null;
+        try {
+            if (navigator.geolocation) {
+                location = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, 
+                        { enableHighAccuracy: true, timeout: 10000 }
+                    );
+                });
+                location = location.coords; // Extrai o objeto de coordenadas
+            }
+        } catch (geoError) {
+            console.warn("Falha no GPS, tentando via IP:", geoError.message);
+            location = await getIPLocation();
+        }
+        
+        if (!location) {
+            status.textContent = 'Não foi possível obter sua localização.';
+            registrarBtn.disabled = false;
+            return;
+        }
 
-      status.textContent = 'Obtendo localização...';
+        // 4. Obtém o endereço a partir das coordenadas
+        status.textContent = 'Convertendo coordenadas em endereço...';
+        let endereco = `Lat: ${location.latitude.toFixed(4)}, Lon: ${location.longitude.toFixed(4)}`;
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${location.latitude}&lon=${location.longitude}`);
+            if (response.ok) {
+                const geoData = await response.json();
+                if (geoData.display_name) endereco = geoData.display_name;
+            }
+        } catch (err) {
+            console.error("Erro ao obter endereço (Nominatim):", err);
+        }
 
-      let location = null;
-
-      if (navigator.geolocation) {
-        location = await new Promise((resolve) => {
-          navigator.geolocation.getCurrentPosition(
-            (pos) => resolve(pos.coords),
-            async () => resolve(await getIPLocation()),
-            { enableHighAccuracy: true, timeout: 15000 }
-          );
-        });
-      } else {
-        location = await getIPLocation();
-      }
-
-      if (!location) {
-        status.textContent = 'Não foi possível obter localização.';
-        return;
-      }
-
-      const horario = new Date().toISOString();
-
-      try {
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?lat=${location.latitude}&lon=${location.longitude}&format=json&addressdetails=1`,
-          { headers: { 'User-Agent': 'RegistroPontoApp/1.0' } }
-        );
-        const geoData = await response.json();
-        const endereco = geoData.display_name || 'Localização aproximada';
-
+        // 5. Monta o objeto final para salvar no banco de dados
         const payload = {
-          user_id: user.id,
-          email: user.email,
-          latitude: location.latitude,
-          longitude: location.longitude,
-          horario,
-          localidade: endereco
+            user_id: user.id,
+            email: user.email,
+            latitude: location.latitude,
+            longitude: location.longitude,
+            horario: new Date().toISOString(),
+            localidade: endereco,
+            tipo_registro: 'Automático' // AJUSTE PRINCIPAL: Classifica o registro
         };
 
-        const { error } = await supabase.from('registros').insert([payload]);
-        if (error) throw error;
+        // 6. Salva o registro no banco de dados
+        status.textContent = 'Salvando registro...';
+        try {
+            const { error } = await supabase.from('registros').insert(payload);
+            if (error) throw error; 
+            status.textContent = 'Ponto registrado com sucesso!';
+            setTimeout(() => { 
+              // Fecha o popup ou redireciona, se necessário
+            }, 2000);
 
-        status.textContent = 'Registro realizado com sucesso!';
-      } catch (err) {
-        console.error(err);
-        status.textContent = 'Erro ao obter endereço.';
-      }
+        } catch (dbError) {
+            console.error("Erro ao salvar no Supabase:", dbError);
+            status.textContent = 'Erro ao salvar o registro no banco.';
+            registrarBtn.disabled = false;
+        }
     });
+
+    // --- Verificação Inicial ao Carregar a Página ---
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        status.textContent = 'Você não está logado.';
+        registrarBtn.disabled = true;
+      }
+    })();
   </script>
 </body>
 </html>

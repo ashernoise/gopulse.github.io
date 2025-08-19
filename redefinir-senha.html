@@ -25,10 +25,11 @@
         e.preventDefault();
         
         const email = document.getElementById("emailRedefinir").value;
-        
-        // CÓDIGO CORRIGIDO E ATIVADO (SEM AS BARRAS //)
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: 'https://ashernoise.github.io/nova-senha.html'
+    
+    // --- ESTA É A PARTE QUE GERA O LINK ---
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: 'https://ashernoise.github.io/nova-senha.html'
+    
         });
 
         if (error) {
@@ -40,4 +41,5 @@
 </script>
 </body>
 </html>
+
 
